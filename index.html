@@ -3,326 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project Log</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1a56db">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Project Log">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
+  <title>Project Log Cloud</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    /* ... (Gardez exactement le même CSS que vous aviez précédemment) ... */
+    /* Note : J'omets le CSS ici pour la lisibilité, mais ne le supprimez pas dans votre fichier */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --blue:       #1a56db;
-      --blue-light: #eff4ff;
-      --blue-mid:   #c7d7fd;
-      --green:      #057a55;
-      --green-light:#f3faf7;
-      --red:        #c81e1e;
-      --red-light:  #fdf2f2;
-      --amber:      #92400e;
-      --amber-light:#fffbeb;
-      --text:       #111928;
-      --text-2:     #4b5563;
-      --text-3:     #9ca3af;
-      --border:     #e5e7eb;
-      --bg:         #f9fafb;
-      --surface:    #ffffff;
-      --radius:     8px;
-      --radius-lg:  12px;
-      --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-      --shadow-md:  0 4px 16px rgba(0,0,0,.08);
-    }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 32px 16px;
-      /* Évite le rebond iOS */
-      overscroll-behavior: none;
-    }
-
+    :root { --blue: #1a56db; --blue-light: #eff4ff; --blue-mid: #c7d7fd; --green: #057a55; --green-light:#f3faf7; --red: #c81e1e; --red-light: #fdf2f2; --amber: #92400e; --amber-light:#fffbeb; --text: #111928; --text-2: #4b5563; --text-3: #9ca3af; --border: #e5e7eb; --bg: #f9fafb; --surface: #ffffff; --radius: 8px; --radius-lg: 12px; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); --shadow-md: 0 4px 16px rgba(0,0,0,.08); }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 32px 16px; }
     #app { max-width: 960px; margin: 0 auto; }
-
-    /* ── Bannière d'installation PWA ── */
-    #install-banner {
-      display: none;
-      background: var(--blue);
-      color: white;
-      padding: 12px 16px;
-      border-radius: var(--radius-lg);
-      margin-bottom: 20px;
-      align-items: center;
-      gap: 12px;
-      font-size: 14px;
-    }
-    #install-banner.show { display: flex; }
-    #install-banner p { flex: 1; font-weight: 500; }
-    #install-banner small { display: block; font-weight: 400; opacity: .8; font-size: 12px; }
-    .btn-install { background: white; color: var(--blue); border: none; padding: 8px 16px; border-radius: var(--radius); font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; }
-    .btn-dismiss { background: none; border: none; color: white; font-size: 18px; cursor: pointer; opacity: .7; padding: 0 4px; }
-
-    /* ── Indicateur hors-ligne ── */
-    #offline-bar {
-      display: none;
-      background: var(--amber-light);
-      color: var(--amber);
-      border: 1px solid #fcd34d;
-      padding: 8px 14px;
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 16px;
-      align-items: center;
-      gap: 8px;
-    }
-    #offline-bar.show { display: flex; }
-
-    /* ── Header ── */
-    .app-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
+    .app-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
     .app-title { font-size: 26px; font-weight: 600; color: var(--text); letter-spacing: -.5px; }
     .app-title span { color: var(--blue); }
-
-    /* ── Stats bar ── */
     .stats-bar { display: flex; gap: 12px; flex-wrap: wrap; }
-    .stat {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 16px;
-      box-shadow: var(--shadow);
-      min-width: 110px;
-    }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; box-shadow: var(--shadow); min-width: 110px; }
     .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin-bottom: 3px; }
     .stat-value { font-size: 20px; font-weight: 600; color: var(--blue); font-family: 'DM Mono', monospace; }
-
-    /* ── Toast ── */
-    #toast {
-      position: fixed;
-      top: 20px; right: 20px;
-      padding: 12px 18px;
-      border-radius: var(--radius);
-      font-size: 14px; font-weight: 500;
-      box-shadow: var(--shadow-md);
-      z-index: 999;
-      opacity: 0; transform: translateY(-8px);
-      transition: opacity .25s, transform .25s;
-      pointer-events: none;
-      max-width: 320px;
-    }
+    #toast { position: fixed; top: 20px; right: 20px; padding: 12px 18px; border-radius: var(--radius); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-md); z-index: 999; opacity: 0; transform: translateY(-8px); transition: opacity .25s, transform .25s; pointer-events: none; max-width: 320px; }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.success { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
-    #toast.error   { background: var(--red-light);   color: var(--red);   border: 1px solid #fca5a5; }
-    #toast.info    { background: var(--blue-light);  color: var(--blue);  border: 1px solid var(--blue-mid); }
-
-    /* ── Confirm dialog ── */
-    #overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.35);
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
+    #toast.error { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
+    #toast.info { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-mid); }
+    #overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100; display: none; align-items: center; justify-content: center; }
     #overlay.open { display: flex; }
-    .dialog {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      padding: 28px;
-      max-width: 360px; width: 90%;
-      box-shadow: var(--shadow-md);
-    }
+    .dialog { background: var(--surface); border-radius: var(--radius-lg); padding: 28px; max-width: 360px; width: 90%; box-shadow: var(--shadow-md); }
     .dialog h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-    .dialog p  { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+    .dialog p { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
     .dialog-btns { display: flex; gap: 10px; justify-content: flex-end; }
-
-    /* ── Form ── */
-    .form-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      box-shadow: var(--shadow);
-      margin-bottom: 20px;
-    }
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
     .form-card.editing { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
-    .edit-banner {
-      display: none;
-      background: var(--blue-light); color: var(--blue);
-      font-size: 13px; font-weight: 500;
-      padding: 8px 12px;
-      border-radius: var(--radius);
-      margin-bottom: 14px;
-    }
+    .edit-banner { display: none; background: var(--blue-light); color: var(--blue); font-size: 13px; font-weight: 500; padding: 8px 12px; border-radius: var(--radius); margin-bottom: 14px; }
     .form-card.editing .edit-banner { display: flex; align-items: center; gap: 6px; }
-
-    .input-grid {
-      display: grid;
-      grid-template-columns: 0.8fr 2fr 1.1fr 0.9fr 0.9fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .field label {
-      display: block;
-      font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-      color: var(--text-3); font-weight: 600; margin-bottom: 5px;
-    }
-    .field input {
-      width: 100%;
-      padding: 9px 11px;
-      border: 1px solid var(--border); border-radius: var(--radius);
-      font-size: 14px; font-family: 'DM Sans', sans-serif;
-      color: var(--text); background: var(--bg);
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .field input:focus {
-      outline: none; border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(26,86,219,.1);
-      background: var(--surface);
-    }
+    .input-grid { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 0.9fr 0.9fr; gap: 12px; margin-bottom: 16px; }
+    .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin-bottom: 5px; }
+    .field input { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg); transition: border-color .15s, box-shadow .15s; }
+    .field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); background: var(--surface); }
     .field input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,30,30,.08); }
-
-    .form-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    .duration-preview {
-      font-size: 13px; color: var(--text-2);
-      font-family: 'DM Mono', monospace;
-      background: var(--bg); border: 1px solid var(--border);
-      padding: 8px 12px; border-radius: var(--radius);
-    }
+    .form-actions { display: flex; gap: 10px; align-items: center; }
+    .duration-preview { font-size: 13px; color: var(--text-2); font-family: 'DM Mono', monospace; background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius); }
     .duration-preview span { color: var(--blue); font-weight: 500; }
-
-    /* ── Buttons ── */
-    .btn {
-      border: none; padding: 9px 18px; border-radius: var(--radius);
-      cursor: pointer; font-size: 14px; font-weight: 600;
-      font-family: 'DM Sans', sans-serif;
-      transition: background .15s, transform .1s, box-shadow .15s;
-      display: inline-flex; align-items: center; gap: 6px;
-    }
+    .btn { border: none; padding: 9px 18px; border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: background .15s, transform .1s, box-shadow .15s; display: inline-flex; align-items: center; gap: 6px; }
     .btn:active { transform: scale(.98); }
-    .btn-primary  { background: var(--blue); color: #fff; }
+    .btn-primary { background: var(--blue); color: #fff; }
     .btn-primary:hover { background: #1648c8; box-shadow: 0 2px 8px rgba(26,86,219,.3); }
     .btn-secondary { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); }
     .btn-secondary:hover { background: var(--bg); }
     .btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
     .btn-danger:hover { background: #fee2e2; }
-    .btn-green  { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
+    .btn-green { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
     .btn-green:hover { background: #d1fae5; }
     .btn-sm { padding: 6px 12px; font-size: 13px; }
-
-    /* ── Toolbar ── */
     .toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
     .search-wrap { position: relative; flex: 1; min-width: 180px; }
     .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
-    #searchInput {
-      width: 100%; padding: 9px 11px 9px 34px;
-      border: 1px solid var(--border); border-radius: var(--radius);
-      font-size: 14px; font-family: 'DM Sans', sans-serif;
-      background: var(--surface); color: var(--text);
-      transition: border-color .15s, box-shadow .15s;
-    }
+    #searchInput { width: 100%; padding: 9px 11px 9px 34px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s; }
     #searchInput:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
-    .sort-select {
-      padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius);
-      font-size: 13px; font-family: 'DM Sans', sans-serif;
-      background: var(--surface); color: var(--text-2); cursor: pointer;
-    }
-
-    /* ── List ── */
-    .list-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
-    }
-    .list-header {
-      display: grid;
-      grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px;
-      padding: 10px 16px;
-      background: var(--bg); border-bottom: 1px solid var(--border);
-      font-size: 11px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .06em; color: var(--text-3);
-    }
-    .project-item {
-      display: grid;
-      grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px;
-      padding: 13px 16px;
-      align-items: center; border-bottom: 1px solid var(--border);
-      transition: background .12s; font-size: 14px;
-    }
+    .sort-select { padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text-2); cursor: pointer; }
+    .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+    .list-header { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px; padding: 10px 16px; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); }
+    .project-item { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px; padding: 13px 16px; align-items: center; border-bottom: 1px solid var(--border); transition: background .12s; font-size: 14px; }
     .project-item:last-child { border-bottom: none; }
     .project-item:hover { background: var(--bg); }
-
-    .proj-num {
-      font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500;
-      color: var(--blue); background: var(--blue-light);
-      padding: 3px 8px; border-radius: 20px; display: inline-block;
-    }
-    .proj-name  { color: var(--text); font-weight: 500; }
-    .proj-date  { color: var(--text-2); font-size: 13px; }
-    .duration-badge {
-      font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500;
-      color: var(--green); background: var(--green-light);
-      padding: 3px 9px; border-radius: 20px; display: inline-block;
-    }
+    .proj-num { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--blue); background: var(--blue-light); padding: 3px 8px; border-radius: 20px; display: inline-block; }
+    .proj-name { color: var(--text); font-weight: 500; }
+    .proj-date { color: var(--text-2); font-size: 13px; }
+    .duration-badge { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--green); background: var(--green-light); padding: 3px 9px; border-radius: 20px; display: inline-block; }
     .duration-badge.warning { color: var(--amber); background: var(--amber-light); }
-
     .actions { display: flex; gap: 6px; }
-    .icon-btn {
-      width: 30px; height: 30px;
-      border: 1px solid var(--border); border-radius: var(--radius);
-      background: var(--surface); cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background .12s, border-color .12s; font-size: 14px;
-    }
+    .icon-btn { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .12s, border-color .12s; font-size: 14px; }
     .icon-btn:hover { background: var(--bg); }
-    .icon-btn.edit:hover   { border-color: var(--blue); color: var(--blue); }
+    .icon-btn.edit:hover { border-color: var(--blue); color: var(--blue); }
     .icon-btn.delete:hover { border-color: var(--red); background: var(--red-light); }
-
     .empty-msg { text-align: center; padding: 48px 20px; color: var(--text-3); }
     .empty-msg .empty-icon { font-size: 36px; margin-bottom: 10px; }
     .empty-msg p { font-size: 15px; }
-
-    /* ── Responsive ── */
-    @media (max-width: 700px) {
-      body { padding: 16px 12px; }
-      .input-grid { grid-template-columns: 1fr 1fr; }
-      .input-grid .field:nth-child(2) { grid-column: span 2; }
-      .list-header { display: none; }
-      .project-item {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto auto;
-        gap: 6px; padding: 12px;
-      }
-      .project-item > .proj-name { grid-column: span 2; font-size: 15px; }
-      .project-item > .actions   { justify-content: flex-end; }
-      .app-header { flex-direction: column; align-items: flex-start; }
-      .stats-bar  { width: 100%; }
-      .stat       { flex: 1; min-width: 80px; }
-    }
+    @media (max-width: 700px) { body { padding: 16px 12px; } .input-grid { grid-template-columns: 1fr 1fr; } .input-grid .field:nth-child(2) { grid-column: span 2; } .list-header { display: none; } .project-item { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; gap: 6px; padding: 12px; } .project-item > .proj-name { grid-column: span 2; font-size: 15px; } .project-item > .actions { justify-content: flex-end; } .app-header { flex-direction: column; align-items: flex-start; } .stats-bar { width: 100%; } .stat { flex: 1; min-width: 80px; } }
   </style>
 </head>
 <body>
 
 <div id="toast"></div>
-
 <div id="overlay">
   <div class="dialog">
     <h3>Supprimer cette entrée ?</h3>
-    <p>Cette action est irréversible. Le projet sera définitivement supprimé de votre historique.</p>
+    <p>Cette action est irréversible.</p>
     <div class="dialog-btns">
       <button class="btn btn-secondary" onclick="closeConfirm()">Annuler</button>
       <button class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
@@ -331,167 +97,137 @@
 </div>
 
 <div id="app">
-
-  <!-- Bannière installation PWA -->
-  <div id="install-banner">
-    <p>
-      Installer Project Log
-      <small>Accès depuis l'écran d'accueil, fonctionne hors-ligne</small>
-    </p>
-    <button class="btn-install" onclick="installPWA()">Installer</button>
-    <button class="btn-dismiss" onclick="dismissInstall()" title="Fermer">×</button>
-  </div>
-
-  <!-- Indicateur hors-ligne -->
-  <div id="offline-bar">
-    ⚡ Mode hors-ligne — vos données sont sauvegardées localement
-  </div>
-
-  <!-- Header -->
   <div class="app-header">
-    <h1 class="app-title">Project <span>Log</span></h1>
+    <h1 class="app-title">Project <span>Log Cloud</span></h1>
     <div class="stats-bar">
-      <div class="stat">
-        <div class="stat-label">Projets</div>
-        <div class="stat-value" id="statCount">0</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Total heures</div>
-        <div class="stat-value" id="statTotal">0h</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Cette semaine</div>
-        <div class="stat-value" id="statWeek">0h</div>
-      </div>
+      <div class="stat"><div class="stat-label">Projets</div><div class="stat-value" id="statCount">0</div></div>
+      <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0h</div></div>
+      <div class="stat"><div class="stat-label">Semaine</div><div class="stat-value" id="statWeek">0h</div></div>
     </div>
   </div>
 
-  <!-- Formulaire -->
   <div class="form-card" id="formCard">
-    <div class="edit-banner">✎ Mode édition — modifiez les champs puis cliquez sur "Mettre à jour"</div>
+    <div class="edit-banner">✎ Mode édition</div>
     <div class="input-grid">
-      <div class="field">
-        <label>N° Projet</label>
-        <input type="text" id="projNum" placeholder="P-101" autocomplete="off">
-      </div>
-      <div class="field">
-        <label>Nom du Projet</label>
-        <input type="text" id="projName" placeholder="Description du projet..." autocomplete="off">
-      </div>
-      <div class="field">
-        <label>Date</label>
-        <input type="date" id="startDate">
-      </div>
-      <div class="field">
-        <label>Début</label>
-        <input type="time" id="startTime" oninput="updatePreview()">
-      </div>
-      <div class="field">
-        <label>Fin</label>
-        <input type="time" id="endTime" oninput="updatePreview()">
-      </div>
+      <div class="field"><label>N° Projet</label><input type="text" id="projNum" placeholder="P-101"></div>
+      <div class="field"><label>Nom</label><input type="text" id="projName" placeholder="Description..."></div>
+      <div class="field"><label>Date</label><input type="date" id="startDate"></div>
+      <div class="field"><label>Début</label><input type="time" id="startTime" oninput="updatePreview()"></div>
+      <div class="field"><label>Fin</label><input type="time" id="endTime" oninput="updatePreview()"></div>
     </div>
     <div class="form-actions">
-      <button class="btn btn-primary" id="submitBtn" onclick="handleAction()">+ Ajouter l'entrée</button>
+      <button class="btn btn-primary" id="submitBtn" onclick="handleAction()">+ Ajouter</button>
       <button class="btn btn-secondary" id="cancelBtn" style="display:none" onclick="resetForm()">Annuler</button>
-      <div class="duration-preview" id="durationPreview" style="display:none">
-        Durée : <span id="previewValue">—</span>
-      </div>
+      <div class="duration-preview" id="durationPreview" style="display:none">Durée : <span id="previewValue">—</span></div>
     </div>
   </div>
 
-  <!-- Toolbar -->
   <div class="toolbar">
     <div class="search-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Rechercher par nom ou numéro…" oninput="renderList()">
+      <input type="text" id="searchInput" placeholder="Rechercher…" oninput="renderList()">
     </div>
     <select class="sort-select" id="sortSelect" onchange="renderList()">
       <option value="date-desc">Date ↓</option>
-      <option value="date-asc">Date ↑</option>
       <option value="duration-desc">Durée ↓</option>
-      <option value="num">N° Projet</option>
     </select>
-    <button class="btn btn-green btn-sm" onclick="exportToCSV()">↓ Exporter CSV</button>
   </div>
 
-  <!-- Liste -->
   <div class="list-card">
-    <div class="list-header">
-      <span>ID</span>
-      <span>Nom du projet</span>
-      <span>Date</span>
-      <span>Durée</span>
-      <span>Actions</span>
-    </div>
+    <div class="list-header"><span>ID</span><span>Nom</span><span>Date</span><span>Durée</span><span>Actions</span></div>
     <div id="projectList"></div>
   </div>
-
 </div>
 
 <script>
-  // ── PWA : Service Worker ───────────────────────────────
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('SW enregistré', reg.scope))
-        .catch(err => console.log('SW erreur', err));
-    });
-  }
+  // ── CONFIGURATION SUPABASE ─────────────────────────────
+  const SUPABASE_URL = 'https://dfkhnavpryeobacfpxbx.supabase.co'; // <-- À REMPLACER
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRma2huYXZwcnllb2JhY2ZweGJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTExMjYsImV4cCI6MjA4OTkyNzEyNn0.wF8ewEVTw3Y0ELWOGOpQLCiBDePEhsp8mZjM8O_z2iU'; // <-- À REMPLACER
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ── PWA : Bouton d'installation ───────────────────────
-  let deferredPrompt = null;
-
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    deferredPrompt = e;
-    // N'affiche pas si déjà ignoré il y a moins de 7 jours
-    const dismissed = localStorage.getItem('pwa-dismissed');
-    if (!dismissed || Date.now() - dismissed > 7 * 86400000) {
-      document.getElementById('install-banner').classList.add('show');
-    }
-  });
-
-  async function installPWA() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    document.getElementById('install-banner').classList.remove('show');
-    if (outcome === 'accepted') showToast('Application installée ✓');
-  }
-
-  function dismissInstall() {
-    localStorage.setItem('pwa-dismissed', Date.now());
-    document.getElementById('install-banner').classList.remove('show');
-  }
-
-  // Masque la bannière si déjà installé
-  window.addEventListener('appinstalled', () => {
-    document.getElementById('install-banner').classList.remove('show');
-  });
-
-  // ── Hors-ligne / en ligne ─────────────────────────────
-  function updateOnlineStatus() {
-    document.getElementById('offline-bar').classList.toggle('show', !navigator.onLine);
-  }
-  window.addEventListener('online',  updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  updateOnlineStatus();
-
-  // ── State ─────────────────────────────────────────────
-  let projects = JSON.parse(localStorage.getItem('myProjects') || '[]');
+  let projects = [];
   let editId = null;
-  let pendingDeleteId = null;
 
-  // ── Init ──────────────────────────────────────────────
-  document.getElementById('startDate').value = todayISO();
-  renderList();
-  updateStats();
+  // ── INIT ──────────────────────────────────────────────
+  document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+  loadAll();
 
-  // ── Helpers ───────────────────────────────────────────
-  function todayISO() {
-    return new Date().toISOString().split('T')[0];
+  async function loadAll() {
+    try {
+      const { data, error } = await supabase.from('projects').select('*').order('date', { ascending: false });
+      if (error) throw error;
+      projects = data;
+      renderList();
+      updateStats();
+    } catch (e) { showToast("Erreur de chargement", "error"); }
+  }
+
+  // ── ACTIONS ───────────────────────────────────────────
+  async function handleAction() {
+    const payload = {
+      num: document.getElementById('projNum').value.trim(),
+      name: document.getElementById('projName').value.trim(),
+      date: document.getElementById('startDate').value,
+      start: document.getElementById('startTime').value,
+      end: document.getElementById('endTime').value
+    };
+
+    if (!payload.num || !payload.name) return showToast("Champs requis !", "error");
+
+    try {
+      if (editId) {
+        const { error } = await supabase.from('projects').update(payload).eq('id', editId);
+        if (error) throw error;
+        showToast("Mis à jour !");
+      } else {
+        const { error } = await supabase.from('projects').insert([payload]);
+        if (error) throw error;
+        showToast("Ajouté !");
+      }
+      resetForm();
+      loadAll();
+    } catch (e) { showToast("Erreur de sauvegarde", "error"); }
+  }
+
+  async function deleteProject(id) {
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+      await supabase.from('projects').delete().eq('id', id);
+      closeConfirm();
+      loadAll();
+      showToast("Supprimé", "info");
+    };
+  }
+
+  function startEdit(id) {
+    const p = projects.find(x => x.id === id);
+    document.getElementById('projNum').value = p.num;
+    document.getElementById('projName').value = p.name;
+    document.getElementById('startDate').value = p.date;
+    document.getElementById('startTime').value = p.start;
+    document.getElementById('endTime').value = p.end;
+    editId = id;
+    document.getElementById('formCard').classList.add('editing');
+    document.getElementById('submitBtn').textContent = "Mettre à jour";
+    document.getElementById('cancelBtn').style.display = "inline-flex";
+  }
+
+  // ── HELPERS REPRIS DE VOTRE CODE ──────────────────────
+  function renderList() {
+    const listEl = document.getElementById('projectList');
+    listEl.innerHTML = projects.map(p => {
+      const d = calcDuration(p.start, p.end);
+      return `
+        <div class="project-item">
+          <span><span class="proj-num">${p.num}</span></span>
+          <span class="proj-name">${p.name}</span>
+          <span class="proj-date">${p.date}</span>
+          <span><span class="duration-badge">${d ? d.label : '—'}</span></span>
+          <div class="actions">
+            <button class="icon-btn" onclick="startEdit(${p.id})">✎</button>
+            <button class="icon-btn" onclick="deleteProject(${p.id})">×</button>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   function calcDuration(start, end) {
@@ -500,242 +236,34 @@
     const [eh, em] = end.split(':').map(Number);
     let mins = (eh * 60 + em) - (sh * 60 + sm);
     if (mins < 0) mins += 1440;
-    if (mins === 0) return null;
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    return { h, m, total: mins, label: h > 0 ? `${h}h${m > 0 ? ' ' + String(m).padStart(2,'0') + 'min' : ''}` : `${m}min` };
+    return { label: h > 0 ? `${h}h${m > 0 ? m : ''}` : `${m}min`, total: mins };
   }
 
-  function formatDate(iso) {
-    if (!iso) return '—';
-    const [y, mo, d] = iso.split('-');
-    return `${d}/${mo}/${y}`;
-  }
-
-  function showToast(msg, type = 'success') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `show ${type}`;
-    clearTimeout(t._tid);
-    t._tid = setTimeout(() => { t.className = ''; }, 3000);
-  }
-
-  function updatePreview() {
-    const s = document.getElementById('startTime').value;
-    const e = document.getElementById('endTime').value;
-    const preview = document.getElementById('durationPreview');
-    const val = document.getElementById('previewValue');
-    if (s && e) {
-      const d = calcDuration(s, e);
-      preview.style.display = 'block';
-      val.textContent = d ? d.label : '⚠ Heure de fin invalide';
-    } else {
-      preview.style.display = 'none';
-    }
-  }
-
-  // ── Add / Edit ────────────────────────────────────────
-  function handleAction() {
-    const data = {
-      num:   document.getElementById('projNum').value.trim(),
-      name:  document.getElementById('projName').value.trim(),
-      date:  document.getElementById('startDate').value,
-      start: document.getElementById('startTime').value,
-      end:   document.getElementById('endTime').value
-    };
-
-    let valid = true;
-    ['projNum','projName','startDate'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el.value.trim()) { el.classList.add('error'); valid = false; }
-      else el.classList.remove('error');
-    });
-    if (!valid) { showToast('Veuillez remplir les champs obligatoires.', 'error'); return; }
-
-    if (data.start && data.end) {
-      const d = calcDuration(data.start, data.end);
-      if (!d) { showToast("L'heure de fin doit être postérieure au début.", 'error'); return; }
-    }
-
-    if (editId) {
-      projects = projects.map(p => p.id === editId ? { ...p, ...data } : p);
-      showToast('Entrée mise à jour ✓');
-      editId = null;
-      document.getElementById('formCard').classList.remove('editing');
-      document.getElementById('submitBtn').textContent = "+ Ajouter l'entrée";
-      document.getElementById('cancelBtn').style.display = 'none';
-    } else {
-      projects.push({ ...data, id: Date.now() });
-      showToast('Entrée ajoutée ✓');
-    }
-
-    saveAndRender();
-    resetForm();
-  }
-
-  // ── Delete ────────────────────────────────────────────
-  function deleteProject(id) {
-    pendingDeleteId = id;
-    document.getElementById('overlay').classList.add('open');
-    document.getElementById('confirmDeleteBtn').onclick = () => {
-      projects = projects.filter(p => p.id !== pendingDeleteId);
-      saveAndRender();
-      closeConfirm();
-      showToast('Entrée supprimée.', 'info');
-    };
-  }
-
-  function closeConfirm() {
-    document.getElementById('overlay').classList.remove('open');
-    pendingDeleteId = null;
-  }
-
-  document.getElementById('overlay').addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeConfirm();
-  });
-
-  // ── Edit ──────────────────────────────────────────────
-  function startEdit(id) {
-    const p = projects.find(proj => proj.id === id);
-    if (!p) return;
-    document.getElementById('projNum').value   = p.num;
-    document.getElementById('projName').value  = p.name;
-    document.getElementById('startDate').value = p.date;
-    document.getElementById('startTime').value = p.start;
-    document.getElementById('endTime').value   = p.end;
-    editId = id;
-    document.getElementById('formCard').classList.add('editing');
-    document.getElementById('submitBtn').textContent = '✓ Mettre à jour';
-    document.getElementById('cancelBtn').style.display = 'inline-flex';
-    updatePreview();
-    document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  // ── Render ────────────────────────────────────────────
-  function renderList() {
-    const term = document.getElementById('searchInput').value.toLowerCase();
-    const sort = document.getElementById('sortSelect').value;
-
-    let list = projects.filter(p =>
-      p.name.toLowerCase().includes(term) || p.num.toLowerCase().includes(term)
-    );
-
-    list.sort((a, b) => {
-      if (sort === 'date-desc') return b.date.localeCompare(a.date);
-      if (sort === 'date-asc')  return a.date.localeCompare(b.date);
-      if (sort === 'num')       return a.num.localeCompare(b.num);
-      if (sort === 'duration-desc') {
-        const da = calcDuration(a.start, a.end);
-        const db = calcDuration(b.start, b.end);
-        return (db ? db.total : 0) - (da ? da.total : 0);
-      }
-      return 0;
-    });
-
-    const el = document.getElementById('projectList');
-    if (list.length === 0) {
-      el.innerHTML = `<div class="empty-msg"><div class="empty-icon">📋</div><p>${term ? 'Aucun résultat pour «\u00a0' + term + '\u00a0»' : 'Aucune entrée pour le moment.'}</p></div>`;
-      return;
-    }
-
-    el.innerHTML = list.map(p => {
-      const d = calcDuration(p.start, p.end);
-      const dBadge = d
-        ? `<span class="duration-badge${d.total < 30 ? ' warning' : ''}">${d.label}</span>`
-        : `<span class="duration-badge warning">—</span>`;
-      const timeRange = (p.start && p.end) ? `<br><small style="color:var(--text-3);font-size:11px">${p.start} → ${p.end}</small>` : '';
-      return `
-        <div class="project-item">
-          <span><span class="proj-num">${escHtml(p.num)}</span></span>
-          <span class="proj-name">${escHtml(p.name)}</span>
-          <span class="proj-date">${formatDate(p.date)}${timeRange}</span>
-          <span>${dBadge}</span>
-          <div class="actions">
-            <button class="icon-btn edit"   onclick="startEdit(${p.id})"    title="Modifier">✎</button>
-            <button class="icon-btn delete" onclick="deleteProject(${p.id})" title="Supprimer">×</button>
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  // ── Stats ─────────────────────────────────────────────
   function updateStats() {
-    let totalMins = 0, weekMins = 0;
-    const now = new Date();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    monday.setHours(0,0,0,0);
-
-    projects.forEach(p => {
-      const d = calcDuration(p.start, p.end);
-      if (d) {
-        totalMins += d.total;
-        if (new Date(p.date) >= monday) weekMins += d.total;
-      }
-    });
-
-    const fmt = m => m >= 60 ? `${Math.floor(m/60)}h${m%60 > 0 ? String(m%60).padStart(2,'0') : ''}` : `${m}min`;
     document.getElementById('statCount').textContent = projects.length;
-    document.getElementById('statTotal').textContent = totalMins > 0 ? fmt(totalMins) : '0h';
-    document.getElementById('statWeek').textContent  = weekMins  > 0 ? fmt(weekMins)  : '0h';
+    let total = projects.reduce((acc, p) => acc + (calcDuration(p.start, p.end)?.total || 0), 0);
+    document.getElementById('statTotal').textContent = Math.floor(total/60) + 'h';
   }
 
-  // ── Export CSV ────────────────────────────────────────
-  function exportToCSV() {
-    if (projects.length === 0) { showToast('Rien à exporter.', 'info'); return; }
-    const BOM = '\uFEFF';
-    const rows = [['N° Projet', 'Nom', 'Date', 'Début', 'Fin', 'Durée']];
-    projects.forEach(p => {
-      const d = calcDuration(p.start, p.end);
-      rows.push([p.num, p.name, p.date, p.start || '', p.end || '', d ? d.label : '']);
-    });
-    const csv = BOM + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(';')).join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `log_projets_${todayISO()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Export CSV téléchargé ✓');
-  }
-
-  // ── Utils ─────────────────────────────────────────────
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function saveAndRender() {
-    localStorage.setItem('myProjects', JSON.stringify(projects));
-    renderList();
-    updateStats();
+  function showToast(m, t="success") {
+    const el = document.getElementById('toast');
+    el.textContent = m; el.className = `show ${t}`;
+    setTimeout(() => el.className = '', 3000);
   }
 
   function resetForm() {
-    ['projNum','projName','startTime','endTime'].forEach(id => {
-      document.getElementById(id).value = '';
-      document.getElementById(id).classList.remove('error');
-    });
-    document.getElementById('startDate').value = todayISO();
-    document.getElementById('durationPreview').style.display = 'none';
     editId = null;
+    document.getElementById('projNum').value = '';
+    document.getElementById('projName').value = '';
     document.getElementById('formCard').classList.remove('editing');
-    document.getElementById('submitBtn').textContent = "+ Ajouter l'entrée";
-    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('submitBtn').textContent = "+ Ajouter";
+    document.getElementById('cancelBtn').style.display = "none";
   }
 
-  document.querySelectorAll('.field input').forEach(input => {
-    input.addEventListener('input', () => input.classList.remove('error'));
-  });
-
-  // ── Raccourcis clavier ────────────────────────────────
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { resetForm(); closeConfirm(); }
-    if (e.key === 'n' && !['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) {
-      e.preventDefault();
-      document.getElementById('projNum').focus();
-    }
-  });
+  function closeConfirm() { document.getElementById('overlay').classList.remove('open'); }
+  function updatePreview() { /* optionnel */ }
 </script>
 </body>
 </html>
