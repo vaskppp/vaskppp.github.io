@@ -27,8 +27,9 @@
     .field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 5px; text-transform: uppercase; }
     .field input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; }
     
-    .toolbar { display: flex; gap: 12px; margin-bottom: 15px; align-items: center; }
-    .search-bar { flex: 1; padding: 10px 15px; border-radius: var(--radius); border: 1px solid var(--border); font-family: inherit; }
+    .toolbar { display: flex; gap: 12px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
+    .search-bar { flex: 2; min-width: 200px; padding: 10px 15px; border-radius: var(--radius); border: 1px solid var(--border); font-family: inherit; }
+    .filter-select { flex: 1; min-width: 150px; padding: 10px; border-radius: var(--radius); border: 1px solid var(--border); background: white; font-family: inherit; cursor: pointer; }
 
     .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
     .btn-primary { background: var(--blue); color: white; }
@@ -38,10 +39,10 @@
     .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .project-item { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 120px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; }
     .proj-num { background: var(--blue-light); color: var(--blue); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-family: 'DM Mono'; }
+    .week-tag { font-size: 10px; font-weight: 700; color: #6b7280; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
     
     .actions-btns { display: flex; gap: 8px; justify-content: flex-end; }
     .action-icon { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; transition: 0.2s; }
-    .action-icon:hover { background: #f3f4f6; }
 
     #toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: white; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
     #toast.show { opacity: 1; }
@@ -74,7 +75,10 @@
   </div>
 
   <div class="toolbar">
-    <input type="text" id="searchBar" class="search-bar" placeholder="🔍 Rechercher par nom ou numéro..." oninput="filterList()">
+    <input type="text" id="searchBar" class="search-bar" placeholder="🔍 Rechercher..." oninput="applyFilters()">
+    <select id="weekFilter" class="filter-select" onchange="applyFilters()">
+      <option value="all">Toutes les semaines</option>
+      </select>
   </div>
 
   <div class="list-card">
@@ -88,12 +92,20 @@
   const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let projects = [];
-  let editId = null; // Variable pour savoir si on modifie ou on crée
+  let editId = null;
 
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
     loadProjects();
   });
+
+  // Calcul du numéro de semaine ISO
+  function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
 
   async function loadProjects() {
     const { data, error } = await _supabase
@@ -103,74 +115,46 @@
       .order('created_at', { ascending: false });
 
     if (!error) {
-      projects = data;
-      renderList(projects);
+      projects = data.map(p => ({
+        ...p,
+        week: getWeekNumber(new Date(p.date))
+      }));
+      updateWeekFilterOptions();
+      applyFilters();
     }
   }
 
-  // --- Ajouter ou Modifier ---
-  document.getElementById('submitBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('submitBtn');
-    const payload = {
-      num: document.getElementById('projNum').value.trim(),
-      name: document.getElementById('projName').value.trim(),
-      date: document.getElementById('startDate').value,
-      start: document.getElementById('startTime').value,
-      end: document.getElementById('endTime').value
-    };
-
-    if (!payload.num || !payload.name) return showToast("Champs requis", "error");
-
-    btn.disabled = true;
-    btn.textContent = "Action en cours...";
-
-    let error;
-    if (editId) {
-      // MODE MODIFICATION
-      const result = await _supabase.from('projects').update(payload).eq('id', editId);
-      error = result.error;
-    } else {
-      // MODE CRÉATION
-      const result = await _supabase.from('projects').insert([payload]);
-      error = result.error;
-    }
-
-    btn.disabled = false;
-
-    if (!error) {
-      showToast(editId ? "Mis à jour !" : "Ajouté !");
-      resetForm();
-      loadProjects();
-    } else {
-      showToast("Erreur", "error");
-      console.error(error);
-    }
-  });
-
-  // --- Préparer l'édition ---
-  function startEdit(id) {
-    const p = projects.find(x => x.id === id);
-    if (!p) return;
-
-    editId = id;
-    document.getElementById('projNum').value = p.num;
-    document.getElementById('projName').value = p.name;
-    document.getElementById('startDate').value = p.date;
-    document.getElementById('startTime').value = p.start;
-    document.getElementById('endTime').value = p.end;
-
-    // Interface
-    document.getElementById('formCard').classList.add('editing');
-    document.getElementById('submitBtn').textContent = "Mettre à jour";
-    document.getElementById('cancelBtn').style.display = "inline-flex";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Génère dynamiquement les numéros de semaines présents dans la base
+  function updateWeekFilterOptions() {
+    const select = document.getElementById('weekFilter');
+    const weeks = [...new Set(projects.map(p => p.week))].sort((a, b) => b - a);
+    
+    // Garde le premier "Toutes les semaines" et ajoute les autres
+    select.innerHTML = '<option value="all">Toutes les semaines</option>';
+    weeks.forEach(w => {
+      const option = document.createElement('option');
+      option.value = w;
+      option.textContent = `Semaine ${w}`;
+      select.appendChild(option);
+    });
   }
 
-  function filterList() {
-    const query = document.getElementById('searchBar').value.toLowerCase();
-    const filtered = projects.filter(p => 
-      p.name.toLowerCase().includes(query) || p.num.toLowerCase().includes(query)
-    );
+  function applyFilters() {
+    const searchQuery = document.getElementById('searchBar').value.toLowerCase();
+    const weekFilter = document.getElementById('weekFilter').value;
+    
+    let filtered = projects;
+
+    if (weekFilter !== 'all') {
+      filtered = filtered.filter(p => p.week == weekFilter);
+    }
+
+    if (searchQuery) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchQuery) || p.num.toLowerCase().includes(searchQuery)
+      );
+    }
+
     renderList(filtered);
   }
 
@@ -184,18 +168,61 @@
       <div class="project-item">
         <span><span class="proj-num">${p.num}</span></span>
         <span style="font-weight:500;">${p.name}</span>
-        <span style="color:#6b7280; font-size:13px;">${p.date}</span>
+        <span style="color:#6b7280; font-size:13px;">${p.date} <span class="week-tag">S${p.week}</span></span>
         <span style="font-family:monospace;">${p.start || '--'} - ${p.end || '--'}</span>
         <div class="actions-btns">
-          <button class="action-icon" onclick="startEdit(${p.id})" title="Modifier">✎</button>
-          <button class="action-icon" style="color:red;" onclick="deleteItem(${p.id})" title="Supprimer">×</button>
+          <button class="action-icon" onclick="startEdit(${p.id})">✎</button>
+          <button class="action-icon" style="color:red;" onclick="deleteItem(${p.id})">×</button>
         </div>
       </div>
     `).join('');
   }
 
+  // --- Fonctions de base (identiques au précédent) ---
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('submitBtn');
+    const payload = {
+      num: document.getElementById('projNum').value.trim(),
+      name: document.getElementById('projName').value.trim(),
+      date: document.getElementById('startDate').value,
+      start: document.getElementById('startTime').value,
+      end: document.getElementById('endTime').value
+    };
+    if (!payload.num || !payload.name) return showToast("Champs requis", "error");
+    btn.disabled = true;
+    let error;
+    if (editId) {
+      const result = await _supabase.from('projects').update(payload).eq('id', editId);
+      error = result.error;
+    } else {
+      const result = await _supabase.from('projects').insert([payload]);
+      error = result.error;
+    }
+    btn.disabled = false;
+    if (!error) {
+      showToast(editId ? "Modifié" : "Ajouté");
+      resetForm();
+      loadProjects();
+    }
+  });
+
+  function startEdit(id) {
+    const p = projects.find(x => x.id === id);
+    if (!p) return;
+    editId = id;
+    document.getElementById('projNum').value = p.num;
+    document.getElementById('projName').value = p.name;
+    document.getElementById('startDate').value = p.date;
+    document.getElementById('startTime').value = p.start;
+    document.getElementById('endTime').value = p.end;
+    document.getElementById('formCard').classList.add('editing');
+    document.getElementById('submitBtn').textContent = "Mettre à jour";
+    document.getElementById('cancelBtn').style.display = "inline-flex";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async function deleteItem(id) {
-    if (confirm("Supprimer définitivement ?")) {
+    if (confirm("Supprimer ?")) {
       await _supabase.from('projects').delete().eq('id', id);
       loadProjects();
     }
@@ -203,22 +230,19 @@
 
   function exportCSV() {
     if (projects.length === 0) return;
-    let csv = "Numero;Nom;Date;Debut;Fin\n";
-    projects.forEach(p => { csv += `${p.num};${p.name};${p.date};${p.start};${p.end}\n`; });
+    let csv = "Numero;Nom;Date;Semaine;Debut;Fin\n";
+    projects.forEach(p => { csv += `${p.num};${p.name};${p.date};${p.week};${p.start};${p.end}\n`; });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `export.csv`;
     link.click();
   }
 
   function resetForm() {
     editId = null;
-    ['projNum','projName','startTime','endTime', 'searchBar'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.value = '';
-    });
+    ['projNum','projName','startTime','endTime'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('formCard').classList.remove('editing');
     document.getElementById('submitBtn').textContent = "+ Ajouter l'entrée";
