@@ -6,95 +6,49 @@
   <title>Project Log Cloud</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    /* ... (Gardez exactement le même CSS que vous aviez précédemment) ... */
-    /* Note : J'omets le CSS ici pour la lisibilité, mais ne le supprimez pas dans votre fichier */
+    /* CSS de base */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --blue: #1a56db; --blue-light: #eff4ff; --blue-mid: #c7d7fd; --green: #057a55; --green-light:#f3faf7; --red: #c81e1e; --red-light: #fdf2f2; --amber: #92400e; --amber-light:#fffbeb; --text: #111928; --text-2: #4b5563; --text-3: #9ca3af; --border: #e5e7eb; --bg: #f9fafb; --surface: #ffffff; --radius: 8px; --radius-lg: 12px; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); --shadow-md: 0 4px 16px rgba(0,0,0,.08); }
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 32px 16px; }
+    :root { --blue: #1a56db; --blue-light: #eff4ff; --blue-mid: #c7d7fd; --green: #057a55; --green-light:#f3faf7; --red: #c81e1e; --red-light: #fdf2f2; --amber: #92400e; --amber-light:#fffbeb; --text: #111928; --text-2: #4b5563; --text-3: #9ca3af; --border: #e5e7eb; --bg: #f9fafb; --surface: #ffffff; --radius: 8px; --radius-lg: 12px; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding: 32px 16px; }
     #app { max-width: 960px; margin: 0 auto; }
+    
+    /* Header & Stats */
     .app-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
-    .app-title { font-size: 26px; font-weight: 600; color: var(--text); letter-spacing: -.5px; }
-    .app-title span { color: var(--blue); }
-    .stats-bar { display: flex; gap: 12px; flex-wrap: wrap; }
-    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; box-shadow: var(--shadow); min-width: 110px; }
-    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin-bottom: 3px; }
-    .stat-value { font-size: 20px; font-weight: 600; color: var(--blue); font-family: 'DM Mono', monospace; }
-    #toast { position: fixed; top: 20px; right: 20px; padding: 12px 18px; border-radius: var(--radius); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-md); z-index: 999; opacity: 0; transform: translateY(-8px); transition: opacity .25s, transform .25s; pointer-events: none; max-width: 320px; }
-    #toast.show { opacity: 1; transform: translateY(0); }
-    #toast.success { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
-    #toast.error { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
-    #toast.info { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-mid); }
-    #overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100; display: none; align-items: center; justify-content: center; }
-    #overlay.open { display: flex; }
-    .dialog { background: var(--surface); border-radius: var(--radius-lg); padding: 28px; max-width: 360px; width: 90%; box-shadow: var(--shadow-md); }
-    .dialog h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-    .dialog p { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
-    .dialog-btns { display: flex; gap: 10px; justify-content: flex-end; }
-    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
-    .form-card.editing { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
-    .edit-banner { display: none; background: var(--blue-light); color: var(--blue); font-size: 13px; font-weight: 500; padding: 8px 12px; border-radius: var(--radius); margin-bottom: 14px; }
-    .form-card.editing .edit-banner { display: flex; align-items: center; gap: 6px; }
+    .stats-bar { display: flex; gap: 12px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; min-width: 100px; }
+    .stat-label { font-size: 11px; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
+    .stat-value { font-size: 20px; font-weight: 600; color: var(--blue); }
+
+    /* Formulaire */
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
     .input-grid { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 0.9fr 0.9fr; gap: 12px; margin-bottom: 16px; }
-    .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin-bottom: 5px; }
-    .field input { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg); transition: border-color .15s, box-shadow .15s; }
-    .field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); background: var(--surface); }
-    .field input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(200,30,30,.08); }
-    .form-actions { display: flex; gap: 10px; align-items: center; }
-    .duration-preview { font-size: 13px; color: var(--text-2); font-family: 'DM Mono', monospace; background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius); }
-    .duration-preview span { color: var(--blue); font-weight: 500; }
-    .btn { border: none; padding: 9px 18px; border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: background .15s, transform .1s, box-shadow .15s; display: inline-flex; align-items: center; gap: 6px; }
-    .btn:active { transform: scale(.98); }
-    .btn-primary { background: var(--blue); color: #fff; }
-    .btn-primary:hover { background: #1648c8; box-shadow: 0 2px 8px rgba(26,86,219,.3); }
-    .btn-secondary { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); }
-    .btn-secondary:hover { background: var(--bg); }
-    .btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #fca5a5; }
-    .btn-danger:hover { background: #fee2e2; }
-    .btn-green { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
-    .btn-green:hover { background: #d1fae5; }
-    .btn-sm { padding: 6px 12px; font-size: 13px; }
-    .toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-    .search-wrap { position: relative; flex: 1; min-width: 180px; }
-    .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
-    #searchInput { width: 100%; padding: 9px 11px 9px 34px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s; }
-    #searchInput:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
-    .sort-select { padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text-2); cursor: pointer; }
-    .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
-    .list-header { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px; padding: 10px 16px; background: var(--bg); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); }
-    .project-item { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px; padding: 13px 16px; align-items: center; border-bottom: 1px solid var(--border); transition: background .12s; font-size: 14px; }
-    .project-item:last-child { border-bottom: none; }
-    .project-item:hover { background: var(--bg); }
-    .proj-num { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--blue); background: var(--blue-light); padding: 3px 8px; border-radius: 20px; display: inline-block; }
-    .proj-name { color: var(--text); font-weight: 500; }
-    .proj-date { color: var(--text-2); font-size: 13px; }
-    .duration-badge { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--green); background: var(--green-light); padding: 3px 9px; border-radius: 20px; display: inline-block; }
-    .duration-badge.warning { color: var(--amber); background: var(--amber-light); }
-    .actions { display: flex; gap: 6px; }
-    .icon-btn { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .12s, border-color .12s; font-size: 14px; }
-    .icon-btn:hover { background: var(--bg); }
-    .icon-btn.edit:hover { border-color: var(--blue); color: var(--blue); }
-    .icon-btn.delete:hover { border-color: var(--red); background: var(--red-light); }
-    .empty-msg { text-align: center; padding: 48px 20px; color: var(--text-3); }
-    .empty-msg .empty-icon { font-size: 36px; margin-bottom: 10px; }
-    .empty-msg p { font-size: 15px; }
-    @media (max-width: 700px) { body { padding: 16px 12px; } .input-grid { grid-template-columns: 1fr 1fr; } .input-grid .field:nth-child(2) { grid-column: span 2; } .list-header { display: none; } .project-item { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; gap: 6px; padding: 12px; } .project-item > .proj-name { grid-column: span 2; font-size: 15px; } .project-item > .actions { justify-content: flex-end; } .app-header { flex-direction: column; align-items: flex-start; } .stats-bar { width: 100%; } .stat { flex: 1; min-width: 80px; } }
+    .field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 5px; text-transform: uppercase; }
+    .field input { width: 100%; padding: 9px; border: 1px solid var(--border); border-radius: var(--radius); }
+    
+    /* Boutons */
+    .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: #1648c8; }
+    
+    /* Liste */
+    .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .project-item { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; }
+    .proj-num { background: var(--blue-light); color: var(--blue); padding: 2px 8px; border-radius: 10px; font-size: 12px; font-family: monospace; }
+    
+    /* Toast */
+    #toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: white; opacity: 0; transition: 0.3s; z-index: 1000; }
+    #toast.show { opacity: 1; }
+    .success { background: var(--green); }
+    .error { background: var(--red); }
   </style>
 </head>
 <body>
 
 <div id="toast"></div>
-<div id="overlay">
-  <div class="dialog">
-    <h3>Supprimer cette entrée ?</h3>
-    <p>Cette action est irréversible.</p>
-    <div class="dialog-btns">
-      <button class="btn btn-secondary" onclick="closeConfirm()">Annuler</button>
-      <button class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
-    </div>
-  </div>
-</div>
 
 <div id="app">
   <div class="app-header">
@@ -102,67 +56,59 @@
     <div class="stats-bar">
       <div class="stat"><div class="stat-label">Projets</div><div class="stat-value" id="statCount">0</div></div>
       <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0h</div></div>
-      <div class="stat"><div class="stat-label">Semaine</div><div class="stat-value" id="statWeek">0h</div></div>
     </div>
   </div>
 
   <div class="form-card" id="formCard">
-    <div class="edit-banner">✎ Mode édition</div>
     <div class="input-grid">
       <div class="field"><label>N° Projet</label><input type="text" id="projNum" placeholder="P-101"></div>
       <div class="field"><label>Nom</label><input type="text" id="projName" placeholder="Description..."></div>
       <div class="field"><label>Date</label><input type="date" id="startDate"></div>
-      <div class="field"><label>Début</label><input type="time" id="startTime" oninput="updatePreview()"></div>
-      <div class="field"><label>Fin</label><input type="time" id="endTime" oninput="updatePreview()"></div>
+      <div class="field"><label>Début</label><input type="time" id="startTime"></div>
+      <div class="field"><label>Fin</label><input type="time" id="endTime"></div>
     </div>
     <div class="form-actions">
-      <button class="btn btn-primary" id="submitBtn" onclick="handleAction()">+ Ajouter</button>
-      <button class="btn btn-secondary" id="cancelBtn" style="display:none" onclick="resetForm()">Annuler</button>
-      <div class="duration-preview" id="durationPreview" style="display:none">Durée : <span id="previewValue">—</span></div>
+      <button class="btn btn-primary" id="submitBtn">+ Ajouter l'entrée</button>
     </div>
-  </div>
-
-  <div class="toolbar">
-    <div class="search-wrap">
-      <input type="text" id="searchInput" placeholder="Rechercher…" oninput="renderList()">
-    </div>
-    <select class="sort-select" id="sortSelect" onchange="renderList()">
-      <option value="date-desc">Date ↓</option>
-      <option value="duration-desc">Durée ↓</option>
-    </select>
   </div>
 
   <div class="list-card">
-    <div class="list-header"><span>ID</span><span>Nom</span><span>Date</span><span>Durée</span><span>Actions</span></div>
     <div id="projectList"></div>
   </div>
 </div>
 
 <script>
-  // ── CONFIGURATION SUPABASE ─────────────────────────────
-  const SUPABASE_URL = 'https://dfkhnavpryeobacfpxbx.supabase.co'; // <-- À REMPLACER
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRma2huYXZwcnllb2JhY2ZweGJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTExMjYsImV4cCI6MjA4OTkyNzEyNn0.wF8ewEVTw3Y0ELWOGOpQLCiBDePEhsp8mZjM8O_z2iU'; // <-- À REMPLACER
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // 1. Initialisation Supabase avec tes clés
+  const SUPABASE_URL = 'https://dfkhnavpryeobacfpxbx.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRma2huYXZwcnllb2JhY2ZweGJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTExMjYsImV4cCI6MjA4OTkyNzEyNn0.wF8ewEVTw3Y0ELWOGOpQLCiBDePEhsp8mZjM8O_z2iU';
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let projects = [];
-  let editId = null;
 
-  // ── INIT ──────────────────────────────────────────────
-  document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
-  loadAll();
+  // 2. Charger les données au démarrage
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+    loadProjects();
+  });
 
-  async function loadAll() {
-    try {
-      const { data, error } = await supabase.from('projects').select('*').order('date', { ascending: false });
-      if (error) throw error;
+  async function loadProjects() {
+    const { data, error } = await _supabase
+      .from('projects')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) {
+      showToast("Erreur de chargement", "error");
+      console.error(error);
+    } else {
       projects = data;
       renderList();
       updateStats();
-    } catch (e) { showToast("Erreur de chargement", "error"); }
+    }
   }
 
-  // ── ACTIONS ───────────────────────────────────────────
-  async function handleAction() {
+  // 3. Ajouter un projet
+  document.getElementById('submitBtn').addEventListener('click', async () => {
     const payload = {
       num: document.getElementById('projNum').value.trim(),
       name: document.getElementById('projName').value.trim(),
@@ -171,106 +117,67 @@
       end: document.getElementById('endTime').value
     };
 
-    if (!payload.num || !payload.name) return showToast("Champs requis !", "error");
+    if (!payload.num || !payload.name) {
+      showToast("Remplis au moins le Numéro et le Nom", "error");
+      return;
+    }
 
-    try {
-      if (editId) {
-        const { error } = await supabase.from('projects').update(payload).eq('id', editId);
-        if (error) throw error;
-        showToast("Mis à jour !");
-      } else {
-        const { error } = await supabase.from('projects').insert([payload]);
-        if (error) throw error;
-        showToast("Ajouté !");
-      }
+    const { error } = await _supabase.from('projects').insert([payload]);
+
+    if (error) {
+      showToast("Erreur lors de l'ajout", "error");
+      console.error(error);
+    } else {
+      showToast("Projet ajouté avec succès !");
       resetForm();
-      loadAll();
-    } catch (e) { showToast("Erreur de sauvegarde", "error"); }
-  }
+      loadProjects();
+    }
+  });
 
-  async function deleteProject(id) {
-    document.getElementById('overlay').classList.add('open');
-    document.getElementById('confirmDeleteBtn').onclick = async () => {
-      await supabase.from('projects').delete().eq('id', id);
-      closeConfirm();
-      loadAll();
-      showToast("Supprimé", "info");
-    };
-  }
-
-  function startEdit(id) {
-    const p = projects.find(x => x.id === id);
-    document.getElementById('projNum').value = p.num;
-    document.getElementById('projName').value = p.name;
-    document.getElementById('startDate').value = p.date;
-    document.getElementById('startTime').value = p.start;
-    document.getElementById('endTime').value = p.end;
-    editId = id;
-    document.getElementById('formCard').classList.add('editing');
-    document.getElementById('submitBtn').textContent = "Mettre à jour";
-    document.getElementById('cancelBtn').style.display = "inline-flex";
-  }
-
-  // ── HELPERS REPRIS DE VOTRE CODE ──────────────────────
+  // 4. Fonctions d'affichage
   function renderList() {
     const listEl = document.getElementById('projectList');
-    listEl.innerHTML = projects.map(p => {
-      const d = calcDuration(p.start, p.end);
-      return `
-        <div class="project-item">
-          <span><span class="proj-num">${p.num}</span></span>
-          <span class="proj-name">${p.name}</span>
-          <span class="proj-date">${p.date}</span>
-          <span><span class="duration-badge">${d ? d.label : '—'}</span></span>
-          <div class="actions">
-            <button class="icon-btn" onclick="startEdit(${p.id})">✎</button>
-            <button class="icon-btn" onclick="deleteProject(${p.id})">×</button>
-          </div>
-        </div>`;
-    }).join('');
+    if (projects.length === 0) {
+      listEl.innerHTML = '<div style="padding:20px; text-align:center; color:#9ca3af;">Aucun projet enregistré</div>';
+      return;
+    }
+
+    listEl.innerHTML = projects.map(p => `
+      <div class="project-item">
+        <span><span class="proj-num">${p.num}</span></span>
+        <span style="font-weight:500;">${p.name}</span>
+        <span style="color:#6b7280; font-size:13px;">${p.date}</span>
+        <span style="font-family:monospace;">${p.start || '--'} - ${p.end || '--'}</span>
+        <button class="btn" style="color:red; background:none;" onclick="deleteItem(${p.id})">Supprimer</button>
+      </div>
+    `).join('');
   }
 
-  function calcDuration(start, end) {
-    if (!start || !end) return null;
-    const [sh, sm] = start.split(':').map(Number);
-    const [eh, em] = end.split(':').map(Number);
-    let mins = (eh * 60 + em) - (sh * 60 + sm);
-    if (mins < 0) mins += 1440;
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return { label: h > 0 ? `${h}h${m > 0 ? m : ''}` : `${m}min`, total: mins };
+  async function deleteItem(id) {
+    if (confirm("Supprimer cette ligne ?")) {
+      const { error } = await _supabase.from('projects').delete().eq('id', id);
+      if (!error) loadProjects();
+    }
   }
 
   function updateStats() {
     document.getElementById('statCount').textContent = projects.length;
-    let total = projects.reduce((acc, p) => acc + (calcDuration(p.start, p.end)?.total || 0), 0);
-    document.getElementById('statTotal').textContent = Math.floor(total/60) + 'h';
-  }
-
-  function showToast(m, t="success") {
-    const el = document.getElementById('toast');
-    el.textContent = m; el.className = `show ${t}`;
-    setTimeout(() => el.className = '', 3000);
   }
 
   function resetForm() {
-    editId = null;
     document.getElementById('projNum').value = '';
     document.getElementById('projName').value = '';
-    document.getElementById('formCard').classList.remove('editing');
-    document.getElementById('submitBtn').textContent = "+ Ajouter";
-    document.getElementById('cancelBtn').style.display = "none";
+    document.getElementById('startTime').value = '';
+    document.getElementById('endTime').value = '';
   }
 
-  function closeConfirm() { document.getElementById('overlay').classList.remove('open'); }
-  function updatePreview() { /* optionnel */ }
-  if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('Service Worker enregistré !'))
-      .catch(err => console.log('Erreur SW:', err));
-  });
-}
+  function showToast(msg, type = "success") {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    setTimeout(() => t.className = '', 3000);
+  }
 </script>
+
 </body>
 </html>
