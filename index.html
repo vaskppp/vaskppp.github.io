@@ -6,41 +6,44 @@
   <title>Project Log Cloud</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* CSS de base */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --blue: #1a56db; --blue-light: #eff4ff; --blue-mid: #c7d7fd; --green: #057a55; --green-light:#f3faf7; --red: #c81e1e; --red-light: #fdf2f2; --amber: #92400e; --amber-light:#fffbeb; --text: #111928; --text-2: #4b5563; --text-3: #9ca3af; --border: #e5e7eb; --bg: #f9fafb; --surface: #ffffff; --radius: 8px; --radius-lg: 12px; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+    :root { 
+      --blue: #1a56db; --blue-light: #eff4ff; --green: #057a55; --red: #c81e1e; 
+      --text: #111928; --text-3: #9ca3af; --border: #e5e7eb; --bg: #f9fafb; --surface: #ffffff; --radius: 8px; 
+    }
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding: 32px 16px; }
     #app { max-width: 960px; margin: 0 auto; }
     
-    /* Header & Stats */
-    .app-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
-    .stats-bar { display: flex; gap: 12px; }
-    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; min-width: 100px; }
-    .stat-label { font-size: 11px; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
-    .stat-value { font-size: 20px; font-weight: 600; color: var(--blue); }
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .app-title span { color: var(--blue); }
 
-    /* Formulaire */
-    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: 0.3s; }
+    .form-card.editing { border-color: var(--blue); background: #f0f7ff; }
+    
     .input-grid { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 0.9fr 0.9fr; gap: 12px; margin-bottom: 16px; }
     .field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 5px; text-transform: uppercase; }
-    .field input { width: 100%; padding: 9px; border: 1px solid var(--border); border-radius: var(--radius); }
+    .field input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; }
     
-    /* Boutons */
-    .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .toolbar { display: flex; gap: 12px; margin-bottom: 15px; align-items: center; }
+    .search-bar { flex: 1; padding: 10px 15px; border-radius: var(--radius); border: 1px solid var(--border); font-family: inherit; }
+
+    .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
     .btn-primary { background: var(--blue); color: white; }
-    .btn-primary:hover { background: #1648c8; }
+    .btn-cancel { background: #e5e7eb; color: #4b5563; display: none; }
+    .btn-export { background: #fff; border: 1px solid var(--border); color: var(--text); }
     
-    /* Liste */
-    .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-    .project-item { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 100px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; }
-    .proj-num { background: var(--blue-light); color: var(--blue); padding: 2px 8px; border-radius: 10px; font-size: 12px; font-family: monospace; }
+    .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .project-item { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 120px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; }
+    .proj-num { background: var(--blue-light); color: var(--blue); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-family: 'DM Mono'; }
     
-    /* Toast */
-    #toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: white; opacity: 0; transition: 0.3s; z-index: 1000; }
+    .actions-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    .action-icon { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; transition: 0.2s; }
+    .action-icon:hover { background: #f3f4f6; }
+
+    #toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: white; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
     #toast.show { opacity: 1; }
     .success { background: var(--green); }
     .error { background: var(--red); }
@@ -53,10 +56,7 @@
 <div id="app">
   <div class="app-header">
     <h1 class="app-title">Project <span>Log Cloud</span></h1>
-    <div class="stats-bar">
-      <div class="stat"><div class="stat-label">Projets</div><div class="stat-value" id="statCount">0</div></div>
-      <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0h</div></div>
-    </div>
+    <button class="btn btn-export" onclick="exportCSV()">📥 Exporter CSV</button>
   </div>
 
   <div class="form-card" id="formCard">
@@ -67,9 +67,14 @@
       <div class="field"><label>Début</label><input type="time" id="startTime"></div>
       <div class="field"><label>Fin</label><input type="time" id="endTime"></div>
     </div>
-    <div class="form-actions">
+    <div style="display:flex; gap:10px;">
       <button class="btn btn-primary" id="submitBtn">+ Ajouter l'entrée</button>
+      <button class="btn btn-cancel" id="cancelBtn" onclick="resetForm()">Annuler</button>
     </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchBar" class="search-bar" placeholder="🔍 Rechercher par nom ou numéro..." oninput="filterList()">
   </div>
 
   <div class="list-card">
@@ -78,14 +83,13 @@
 </div>
 
 <script>
-  // 1. Initialisation Supabase avec tes clés
   const SUPABASE_URL = 'https://dfkhnavpryeobacfpxbx.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRma2huYXZwcnllb2JhY2ZweGJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNTExMjYsImV4cCI6MjA4OTkyNzEyNn0.wF8ewEVTw3Y0ELWOGOpQLCiBDePEhsp8mZjM8O_z2iU';
   const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let projects = [];
+  let editId = null; // Variable pour savoir si on modifie ou on crée
 
-  // 2. Charger les données au démarrage
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
     loadProjects();
@@ -95,20 +99,18 @@
     const { data, error } = await _supabase
       .from('projects')
       .select('*')
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
 
-    if (error) {
-      showToast("Erreur de chargement", "error");
-      console.error(error);
-    } else {
+    if (!error) {
       projects = data;
-      renderList();
-      updateStats();
+      renderList(projects);
     }
   }
 
-  // 3. Ajouter un projet
+  // --- Ajouter ou Modifier ---
   document.getElementById('submitBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('submitBtn');
     const payload = {
       num: document.getElementById('projNum').value.trim(),
       name: document.getElementById('projName').value.trim(),
@@ -117,64 +119,115 @@
       end: document.getElementById('endTime').value
     };
 
-    if (!payload.num || !payload.name) {
-      showToast("Remplis au moins le Numéro et le Nom", "error");
-      return;
+    if (!payload.num || !payload.name) return showToast("Champs requis", "error");
+
+    btn.disabled = true;
+    btn.textContent = "Action en cours...";
+
+    let error;
+    if (editId) {
+      // MODE MODIFICATION
+      const result = await _supabase.from('projects').update(payload).eq('id', editId);
+      error = result.error;
+    } else {
+      // MODE CRÉATION
+      const result = await _supabase.from('projects').insert([payload]);
+      error = result.error;
     }
 
-    const { error } = await _supabase.from('projects').insert([payload]);
+    btn.disabled = false;
 
-    if (error) {
-      showToast("Erreur lors de l'ajout", "error");
-      console.error(error);
-    } else {
-      showToast("Projet ajouté avec succès !");
+    if (!error) {
+      showToast(editId ? "Mis à jour !" : "Ajouté !");
       resetForm();
       loadProjects();
+    } else {
+      showToast("Erreur", "error");
+      console.error(error);
     }
   });
 
-  // 4. Fonctions d'affichage
-  function renderList() {
+  // --- Préparer l'édition ---
+  function startEdit(id) {
+    const p = projects.find(x => x.id === id);
+    if (!p) return;
+
+    editId = id;
+    document.getElementById('projNum').value = p.num;
+    document.getElementById('projName').value = p.name;
+    document.getElementById('startDate').value = p.date;
+    document.getElementById('startTime').value = p.start;
+    document.getElementById('endTime').value = p.end;
+
+    // Interface
+    document.getElementById('formCard').classList.add('editing');
+    document.getElementById('submitBtn').textContent = "Mettre à jour";
+    document.getElementById('cancelBtn').style.display = "inline-flex";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function filterList() {
+    const query = document.getElementById('searchBar').value.toLowerCase();
+    const filtered = projects.filter(p => 
+      p.name.toLowerCase().includes(query) || p.num.toLowerCase().includes(query)
+    );
+    renderList(filtered);
+  }
+
+  function renderList(list) {
     const listEl = document.getElementById('projectList');
-    if (projects.length === 0) {
-      listEl.innerHTML = '<div style="padding:20px; text-align:center; color:#9ca3af;">Aucun projet enregistré</div>';
+    if (list.length === 0) {
+      listEl.innerHTML = '<div style="padding:40px; text-align:center; color:#9ca3af;">Aucun projet trouvé</div>';
       return;
     }
-
-    listEl.innerHTML = projects.map(p => `
+    listEl.innerHTML = list.map(p => `
       <div class="project-item">
         <span><span class="proj-num">${p.num}</span></span>
         <span style="font-weight:500;">${p.name}</span>
         <span style="color:#6b7280; font-size:13px;">${p.date}</span>
         <span style="font-family:monospace;">${p.start || '--'} - ${p.end || '--'}</span>
-        <button class="btn" style="color:red; background:none;" onclick="deleteItem(${p.id})">Supprimer</button>
+        <div class="actions-btns">
+          <button class="action-icon" onclick="startEdit(${p.id})" title="Modifier">✎</button>
+          <button class="action-icon" style="color:red;" onclick="deleteItem(${p.id})" title="Supprimer">×</button>
+        </div>
       </div>
     `).join('');
   }
 
   async function deleteItem(id) {
-    if (confirm("Supprimer cette ligne ?")) {
-      const { error } = await _supabase.from('projects').delete().eq('id', id);
-      if (!error) loadProjects();
+    if (confirm("Supprimer définitivement ?")) {
+      await _supabase.from('projects').delete().eq('id', id);
+      loadProjects();
     }
   }
 
-  function updateStats() {
-    document.getElementById('statCount').textContent = projects.length;
+  function exportCSV() {
+    if (projects.length === 0) return;
+    let csv = "Numero;Nom;Date;Debut;Fin\n";
+    projects.forEach(p => { csv += `${p.num};${p.name};${p.date};${p.start};${p.end}\n`; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
   }
 
   function resetForm() {
-    document.getElementById('projNum').value = '';
-    document.getElementById('projName').value = '';
-    document.getElementById('startTime').value = '';
-    document.getElementById('endTime').value = '';
+    editId = null;
+    ['projNum','projName','startTime','endTime', 'searchBar'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.value = '';
+    });
+    document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('formCard').classList.remove('editing');
+    document.getElementById('submitBtn').textContent = "+ Ajouter l'entrée";
+    document.getElementById('cancelBtn').style.display = "none";
   }
 
   function showToast(msg, type = "success") {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `show ${type}`;
+    t.textContent = msg; t.className = `show ${type}`;
     setTimeout(() => t.className = '', 3000);
   }
 </script>
