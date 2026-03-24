@@ -2,52 +2,71 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project Log Cloud</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Project Log Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { 
       --blue: #1a56db; --blue-light: #eff4ff; --green: #057a55; --red: #c81e1e; 
-      --text: #111928; --text-3: #9ca3af; --border: #e5e7eb; --bg: #f9fafb; --surface: #ffffff; --radius: 8px; 
+      --text: #111928; --text-3: #6b7280; --border: #e5e7eb; --bg: #f3f4f6; --surface: #ffffff; --radius: 16px; 
     }
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding: 32px 16px; }
-    #app { max-width: 960px; margin: 0 auto; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 40px; }
+    #app { max-width: 600px; margin: 0 auto; }
     
-    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .app-title { font-size: 1.4rem; font-weight: 700; }
     .app-title span { color: var(--blue); }
 
-    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.1); transition: 0.3s; }
-    .form-card.editing { border-color: var(--blue); background: #f0f7ff; }
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .form-card.editing { border: 2px solid var(--blue); background: var(--blue-light); }
     
-    .input-grid { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 0.9fr 0.9fr; gap: 12px; margin-bottom: 16px; }
-    .field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 5px; text-transform: uppercase; }
-    .field input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; }
+    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+    .field-full { grid-column: span 2; }
+    .field label { display: block; font-size: 10px; font-weight: 800; color: var(--text-3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; font-family: inherit; }
     
-    .toolbar { display: flex; gap: 12px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
-    .search-bar { flex: 2; min-width: 200px; padding: 10px 15px; border-radius: var(--radius); border: 1px solid var(--border); font-family: inherit; }
-    .filter-select { flex: 1; min-width: 150px; padding: 10px; border-radius: var(--radius); border: 1px solid var(--border); background: white; font-family: inherit; cursor: pointer; }
-
-    .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn { flex: 1; padding: 14px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
     .btn-primary { background: var(--blue); color: white; }
     .btn-cancel { background: #e5e7eb; color: #4b5563; display: none; }
-    .btn-export { background: #fff; border: 1px solid var(--border); color: var(--text); }
-    
-    .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .project-item { display: grid; grid-template-columns: 0.8fr 2fr 1.1fr 1fr 120px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; }
-    .proj-num { background: var(--blue-light); color: var(--blue); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-family: 'DM Mono'; }
-    .week-tag { font-size: 10px; font-weight: 700; color: #6b7280; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
-    
-    .actions-btns { display: flex; gap: 8px; justify-content: flex-end; }
-    .action-icon { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; transition: 0.2s; }
+    .btn-header { padding: 10px 14px; background: white; border: 1px solid var(--border); font-size: 12px; flex: none; border-radius: 10px; font-weight: 600; }
 
-    #toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: white; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
-    #toast.show { opacity: 1; }
-    .success { background: var(--green); }
-    .error { background: var(--red); }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-bar { flex: 2; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); font-size: 14px; background: white; }
+    .filter-select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: white; font-size: 14px; font-weight: 600; }
+
+    .project-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    
+    .date-badge { display: flex; align-items: center; gap: 10px; }
+    .week-label { background: var(--text); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: 'DM Mono'; }
+    .date-label { font-size: 14px; font-weight: 600; color: var(--text-3); display: flex; gap: 5px; align-items: center; }
+    .day-name { text-transform: capitalize; color: var(--text); }
+    .day-num { color: var(--blue); font-weight: 700; }
+
+    .proj-badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-family: 'DM Mono'; font-weight: 700; }
+    
+    .card-body { margin-bottom: 14px; }
+    .card-title { font-weight: 700; font-size: 17px; color: var(--text); display: block; line-height: 1.3; }
+    
+    .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f9fafb; }
+    .time-info { font-size: 13px; color: var(--text-3); display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .duration { color: var(--green); font-weight: 800; background: #ecfdf5; padding: 3px 8px; border-radius: 6px; font-size: 12px; }
+
+    .action-icons { display: flex; gap: 12px; }
+    .icon-btn { background: #f3f4f6; border: none; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 10px; transition: 0.2s; }
+    .icon-btn:active { transform: scale(0.9); }
+    .icon-edit { color: var(--blue); }
+    .icon-del { color: #ef4444; }
+
+    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 50px; color: white; font-weight: 700; opacity: 0; transition: 0.4s; z-index: 1000; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); }
+    #toast.show { opacity: 1; bottom: 30px; }
   </style>
 </head>
 <body>
@@ -56,34 +75,35 @@
 
 <div id="app">
   <div class="app-header">
-    <h1 class="app-title">Project <span>Log Cloud</span></h1>
-    <button class="btn btn-export" onclick="exportCSV()">📥 Exporter CSV</button>
+    <h1 class="app-title">Project <span>Log</span></h1>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-header" onclick="exportCSV()">📊 CSV</button>
+      <button class="btn btn-header" style="color:var(--red)" onclick="generatePDF()">📕 PDF</button>
+    </div>
   </div>
 
   <div class="form-card" id="formCard">
     <div class="input-grid">
       <div class="field"><label>N° Projet</label><input type="text" id="projNum" placeholder="P-101"></div>
-      <div class="field"><label>Nom</label><input type="text" id="projName" placeholder="Description..."></div>
       <div class="field"><label>Date</label><input type="date" id="startDate"></div>
+      <div class="field field-full"><label>Nom de la tâche</label><input type="text" id="projName" placeholder="Description du travail..."></div>
       <div class="field"><label>Début</label><input type="time" id="startTime"></div>
       <div class="field"><label>Fin</label><input type="time" id="endTime"></div>
     </div>
-    <div style="display:flex; gap:10px;">
-      <button class="btn btn-primary" id="submitBtn">+ Ajouter l'entrée</button>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="submitBtn">Enregistrer</button>
       <button class="btn btn-cancel" id="cancelBtn" onclick="resetForm()">Annuler</button>
     </div>
   </div>
 
   <div class="toolbar">
-    <input type="text" id="searchBar" class="search-bar" placeholder="🔍 Rechercher..." oninput="applyFilters()">
+    <input type="text" id="searchBar" class="search-bar" placeholder="🔍 Rechercher projet..." oninput="applyFilters()">
     <select id="weekFilter" class="filter-select" onchange="applyFilters()">
-      <option value="all">Toutes les semaines</option>
-      </select>
+      <option value="all">S-Toutes</option>
+    </select>
   </div>
 
-  <div class="list-card">
-    <div id="projectList"></div>
-  </div>
+  <div id="projectList"></div>
 </div>
 
 <script>
@@ -99,86 +119,105 @@
     loadProjects();
   });
 
-  // Calcul du numéro de semaine ISO
   function getWeekNumber(d) {
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return Math.ceil((((d - new Date(Date.UTC(d.getUTCFullYear(), 0, 1))) / 86400000) + 1) / 7);
+  }
+
+  function stringToColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    return `hsl(${Math.abs(hash) % 360}, 65%, 40%)`;
+  }
+
+  function calculateDuration(start, end) {
+    if (!start || !end) return '';
+    const s = start.split(':'), e = end.split(':');
+    let diff = (parseInt(e[0])*60 + parseInt(e[1])) - (parseInt(s[0])*60 + parseInt(s[1]));
+    if (diff < 0) return '';
+    const h = Math.floor(diff/60), m = diff%60;
+    return `${h}h${m > 0 ? m.toString().padStart(2,'0') : ''}`;
   }
 
   async function loadProjects() {
-    const { data, error } = await _supabase
-      .from('projects')
-      .select('*')
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false });
-
+    const { data, error } = await _supabase.from('projects').select('*').order('date', { ascending: false }).order('created_at', { ascending: false });
     if (!error) {
-      projects = data.map(p => ({
-        ...p,
-        week: getWeekNumber(new Date(p.date))
-      }));
+      projects = data.map(p => ({ ...p, week: getWeekNumber(new Date(p.date)) }));
       updateWeekFilterOptions();
       applyFilters();
     }
   }
 
-  // Génère dynamiquement les numéros de semaines présents dans la base
   function updateWeekFilterOptions() {
     const select = document.getElementById('weekFilter');
     const weeks = [...new Set(projects.map(p => p.week))].sort((a, b) => b - a);
-    
-    // Garde le premier "Toutes les semaines" et ajoute les autres
-    select.innerHTML = '<option value="all">Toutes les semaines</option>';
+    select.innerHTML = '<option value="all">S-Toutes</option>';
     weeks.forEach(w => {
-      const option = document.createElement('option');
-      option.value = w;
-      option.textContent = `Semaine ${w}`;
-      select.appendChild(option);
+      const opt = document.createElement('option');
+      opt.value = w; opt.textContent = `Sem. ${w}`;
+      select.appendChild(opt);
     });
   }
 
   function applyFilters() {
-    const searchQuery = document.getElementById('searchBar').value.toLowerCase();
-    const weekFilter = document.getElementById('weekFilter').value;
-    
+    const query = document.getElementById('searchBar').value.toLowerCase();
+    const week = document.getElementById('weekFilter').value;
     let filtered = projects;
-
-    if (weekFilter !== 'all') {
-      filtered = filtered.filter(p => p.week == weekFilter);
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchQuery) || p.num.toLowerCase().includes(searchQuery)
-      );
-    }
-
+    if (week !== 'all') filtered = filtered.filter(p => p.week == week);
+    if (query) filtered = filtered.filter(p => p.name.toLowerCase().includes(query) || p.num.toLowerCase().includes(query));
     renderList(filtered);
   }
 
   function renderList(list) {
     const listEl = document.getElementById('projectList');
-    if (list.length === 0) {
-      listEl.innerHTML = '<div style="padding:40px; text-align:center; color:#9ca3af;">Aucun projet trouvé</div>';
-      return;
-    }
-    listEl.innerHTML = list.map(p => `
-      <div class="project-item">
-        <span><span class="proj-num">${p.num}</span></span>
-        <span style="font-weight:500;">${p.name}</span>
-        <span style="color:#6b7280; font-size:13px;">${p.date} <span class="week-tag">S${p.week}</span></span>
-        <span style="font-family:monospace;">${p.start || '--'} - ${p.end || '--'}</span>
-        <div class="actions-btns">
-          <button class="action-icon" onclick="startEdit(${p.id})">✎</button>
-          <button class="action-icon" style="color:red;" onclick="deleteItem(${p.id})">×</button>
+    if (list.length === 0) { listEl.innerHTML = '<p style="text-align:center; color:gray; margin-top:40px;">Aucun historique</p>'; return; }
+    
+    listEl.innerHTML = list.map(p => {
+      const color = stringToColor(p.num);
+      const duration = calculateDuration(p.start, p.end);
+      const dateObj = new Date(p.date);
+      
+      // NOM COMPLET DU JOUR + NUMÉRO JOUR/MOIS
+      const dayName = dateObj.toLocaleDateString('fr-FR', { weekday: 'long' });
+      const dayMonthNum = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+
+      return `
+        <div class="project-card">
+          <div class="card-header">
+            <div class="date-badge">
+              <span class="week-label">S${p.week}</span>
+              <div class="date-label">
+                <span class="day-name">${dayName}</span>
+                <span class="day-num">${dayMonthNum}</span>
+              </div>
+            </div>
+            <span class="proj-badge" style="background:${color}10; color:${color}; border:1px solid ${color}30;">${p.num}</span>
+          </div>
+
+          <div class="card-body">
+            <span class="card-title">${p.name}</span>
+          </div>
+
+          <div class="card-footer">
+            <div class="time-info">
+              <span>🕒 ${p.start || '--'} - ${p.end || '--'}</span>
+              ${duration ? `<span class="duration">${duration}</span>` : ''}
+            </div>
+            <div class="action-icons">
+              <button class="icon-btn icon-edit" onclick="startEdit(${p.id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="icon-btn icon-del" onclick="deleteItem(${p.id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
-  // --- Fonctions de base (identiques au précédent) ---
   document.getElementById('submitBtn').addEventListener('click', async () => {
     const btn = document.getElementById('submitBtn');
     const payload = {
@@ -191,19 +230,10 @@
     if (!payload.num || !payload.name) return showToast("Champs requis", "error");
     btn.disabled = true;
     let error;
-    if (editId) {
-      const result = await _supabase.from('projects').update(payload).eq('id', editId);
-      error = result.error;
-    } else {
-      const result = await _supabase.from('projects').insert([payload]);
-      error = result.error;
-    }
+    if (editId) error = (await _supabase.from('projects').update(payload).eq('id', editId)).error;
+    else error = (await _supabase.from('projects').insert([payload])).error;
     btn.disabled = false;
-    if (!error) {
-      showToast(editId ? "Modifié" : "Ajouté");
-      resetForm();
-      loadProjects();
-    }
+    if (!error) { showToast("Enregistré !"); resetForm(); loadProjects(); }
   });
 
   function startEdit(id) {
@@ -216,28 +246,37 @@
     document.getElementById('startTime').value = p.start;
     document.getElementById('endTime').value = p.end;
     document.getElementById('formCard').classList.add('editing');
-    document.getElementById('submitBtn').textContent = "Mettre à jour";
-    document.getElementById('cancelBtn').style.display = "inline-flex";
+    document.getElementById('cancelBtn').style.display = "flex";
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function deleteItem(id) {
-    if (confirm("Supprimer ?")) {
+    if (confirm("Supprimer ce log ?")) {
       await _supabase.from('projects').delete().eq('id', id);
+      showToast("Log supprimé", "error");
       loadProjects();
     }
   }
 
+  async function generatePDF() {
+    const week = document.getElementById('weekFilter').value;
+    if (week === 'all') return showToast("Filtre une semaine S-XX avant", "error");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const filtered = projects.filter(p => p.week == week).sort((a,b) => a.date.localeCompare(b.date));
+    doc.setFontSize(18);
+    doc.text(`Rapport d'activité - Semaine ${week}`, 14, 20);
+    const body = filtered.map(p => [p.date, p.num, p.name, `${p.start}-${p.end}`, calculateDuration(p.start, p.end)]);
+    doc.autoTable({ startY: 30, head: [['Date', 'Projet', 'Tâche', 'Heures', 'Durée']], body });
+    doc.save(`Rapport_S${week}.pdf`);
+  }
+
   function exportCSV() {
-    if (projects.length === 0) return;
-    let csv = "Numero;Nom;Date;Semaine;Debut;Fin\n";
-    projects.forEach(p => { csv += `${p.num};${p.name};${p.date};${p.week};${p.start};${p.end}\n`; });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    let csv = "Date;Projet;Nom;Debut;Fin;Duree\n";
+    projects.forEach(p => csv += `${p.date};${p.num};${p.name};${p.start};${p.end};${calculateDuration(p.start,p.end)}\n`);
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `export.csv`;
-    link.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'export_logs.csv'; a.click();
   }
 
   function resetForm() {
@@ -245,14 +284,15 @@
     ['projNum','projName','startTime','endTime'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('formCard').classList.remove('editing');
-    document.getElementById('submitBtn').textContent = "+ Ajouter l'entrée";
     document.getElementById('cancelBtn').style.display = "none";
   }
 
   function showToast(msg, type = "success") {
     const t = document.getElementById('toast');
-    t.textContent = msg; t.className = `show ${type}`;
-    setTimeout(() => t.className = '', 3000);
+    t.textContent = msg; 
+    t.style.background = type === "error" ? "#e11d48" : "#059669";
+    t.className = 'show';
+    setTimeout(() => t.className = '', 2500);
   }
 </script>
 
